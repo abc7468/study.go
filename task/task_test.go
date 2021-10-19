@@ -1,4 +1,4 @@
-package subtask
+package task
 
 import (
 	"fmt"
