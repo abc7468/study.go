@@ -45,13 +45,13 @@ func TestGetUserInfo(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(http.StatusOK, resp.StatusCode)
 	data, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(string(data), "No User Id:89")
+	assert.Equal(string(data), "No User ID:89")
 
 	resp, err = http.Get(ts.URL + "/users/56")
 	assert.NoError(err)
 	assert.Equal(http.StatusOK, resp.StatusCode)
 	data, _ = ioutil.ReadAll(resp.Body)
-	assert.Equal(string(data), "User Id:56")
+	assert.Equal(string(data), "No User ID:56")
 }
 
 func TestCreateUser(t *testing.T) {
@@ -87,4 +87,27 @@ func TestCreateUserWithNoData(t *testing.T) {
 	res, err := http.Post(ts.URL+"/users", "application/json", nil)
 	assert.NoError(err)
 	assert.Equal(http.StatusBadRequest, res.StatusCode)
+}
+
+func TestDeleteUser(t *testing.T) {
+	assert := assert.New(t)
+	ts := httptest.NewServer(NewHandler())
+	defer ts.Close()
+	req, _ := http.NewRequest("DELETE", ts.URL+"/users/1", nil)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(err)
+	assert.Equal(http.StatusOK, res.StatusCode)
+	data, _ := ioutil.ReadAll(res.Body)
+	assert.Contains(string(data), "No User ID:1")
+
+	res, err = http.Post(ts.URL+"/users", "application/json",
+		strings.NewReader(`{"first_name":"jang", "last_name":"seonghyun","email":"abc@naver.com"}`))
+
+	req, _ = http.NewRequest("DELETE", ts.URL+"/users/1", nil)
+	res, err = http.DefaultClient.Do(req)
+
+	assert.NoError(err)
+	assert.Equal(http.StatusOK, res.StatusCode)
+	data, _ = ioutil.ReadAll(res.Body)
+	assert.Contains(string(data), "No User ID:1")
 }

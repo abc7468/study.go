@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -18,6 +19,7 @@ type User struct {
 }
 
 var userMap map[int]*User
+var lastID int
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Hello world")
@@ -27,12 +29,38 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Get UserInfo by /users/{id}")
 }
 
+func deleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, err)
+	}
+	_, ok := userMap[id]
+	if !ok {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "No User ID:", id)
+		return
+	}
+	delete(userMap, id)
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Delete User ID:", id)
+}
+
 func getUserInfoHandler(w http.ResponseWriter, r *http.Request) {
-	user := new(User)
-	user.ID = 2
-	user.FirstName = "jang"
-	user.LastName = "seonghyun"
-	user.Email = "abc@naver.com"
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, err)
+		return
+	}
+	user, ok := userMap[id]
+	if !ok {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "No User ID:", id)
+		return
+	}
 
 	w.Header().Add("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -48,9 +76,11 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, err)
 		return
 	}
-
-	user.ID = 2
+	lastID++
+	user.ID = lastID
 	user.CreatedAt = time.Now()
+	userMap[user.ID] = user
+
 	w.Header().Add("content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	data, _ := json.Marshal(user)
@@ -64,6 +94,7 @@ func NewHandler() http.Handler {
 	mux.HandleFunc("/", indexHandler)
 	mux.HandleFunc("/users", usersHandler).Methods("GET")
 	mux.HandleFunc("/users", createUserHandler).Methods("POST")
-	mux.HandleFunc("/users/{id:[0-9]+}", getUserInfoHandler)
+	mux.HandleFunc("/users/{id:[0-9]+}", getUserInfoHandler).Methods("GET")
+	mux.HandleFunc("/users/{id:[0-9]+}", deleteUserHandler).Methods("DELETE")
 	return mux
 }

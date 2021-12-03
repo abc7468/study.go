@@ -1,17 +1,18 @@
 ###
-GET http://localhost:8080/api/v1/task/10
-
-###
-POST http://localhost:8080/api/v1/task/1
+POST http://localhost:3000/users
 
 {
-    "id": 4,
-    
+    "first_name" : "jang",
+    "last_name" : "seonghyun",
+    "email" : "abc7468@naver.com"
 }
 
 ###
-PUT http://localhost:8080/api/v1/task/1
 
-###
-DELETE http://localhost:8080/api/v1/task/2
+GET http://localhost:3000/users/2
 
+{
+    "first_name" : "jang",
+    "last_name" : "seonghyun",
+    "email" : "abc7468@naver.com"
+}
